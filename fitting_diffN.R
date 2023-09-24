@@ -428,7 +428,6 @@ tvc_fit = function(dat, dat.baseline, dat.left, ctrl){
   se_Q=sqrt(diag(cov_Q))
   
   
-  
   pAIC = -2*log_lik + 2*p*q*m
   
   out = list(parameters = parameters, theta_info = theta_info, kn = kn, func_est = func_est, iterations = c(iter, it),
@@ -440,8 +439,4 @@ tvc_fit = function(dat, dat.baseline, dat.left, ctrl){
   
   
 }
-
-
-
-
 
