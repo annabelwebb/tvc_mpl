@@ -388,9 +388,9 @@ theta_hessian = function(psi, h0, PsiStar_r, PsiStar_l, X, beta, S_r, S_l, censo
   
   delta = any(censor[,2])
   eXBeta = exp(X%*%beta)
-  d_1 = delta * as.numeric((1/(h0^2)))
-  d_2 = as.numeric(censor[,3] * (eXBeta^2) * S_r$S/((1-S_r$S)^2))
-  d_3 = as.numeric(censor[,4] * (eXBeta^2) * S_l$S * S_r$S/((S_l$S - S_r$S)^2))
+  d_1 = delta * as.numeric((1/((h0^2) +1e-6)))
+  d_2 = as.numeric(censor[,3] * (eXBeta^2) * S_r$S/((1-S_r$S+ 1e-6)^2))
+  d_3 = as.numeric(censor[,4] * (eXBeta^2) * S_l$S * S_r$S/((S_l$S - S_r$S+ 1e-6)^2))
   
   theta_neghess = t(psi) %*% diag(d_1) %*% psi +
     t(PsiStar_r$Psi_star) %*% diag(d_2) %*% PsiStar_r$Psi_star +
@@ -416,10 +416,10 @@ beta_gamma_hessian = function(censor_long, beta, model_mat, A_r, A_l, S_r, S_l, 
   Z = model_mat$Z #Nxq
   X = model_mat$X_long #Nxp
   
-  d_1 = censor_long[,1] + censor_long[,2] - censor_long[,3]*(S_r$S_long - S_r$S_long*H_r$H_long - S_r$S_long^2)/((1 - S_r$S_long)^2) - 
-    censor_long[,4]*(S_r$S_long/(S_l$S_long-S_r$S_long) + S_l$S_long*S_r$S_long*(H_l$H_long-H_r$H_long)/((S_l$S_long-S_r$S_long)^2) )
+  d_1 = censor_long[,1] + censor_long[,2] - censor_long[,3]*(S_r$S_long - S_r$S_long*H_r$H_long - S_r$S_long^2)/((1 - S_r$S_long + 1e-6)^2) - 
+    censor_long[,4]*(S_r$S_long/(S_l$S_long-S_r$S_long+ 1e-6) + S_l$S_long*S_r$S_long*(H_l$H_long-H_r$H_long)/((S_l$S_long-S_r$S_long + 1e-6)^2) )
   
-  d_2 = censor_long[,4] * (S_l$S_long/(S_l$S_long-S_r$S_long) + S_l$S_long*S_r$S_long*(H_l$H_long-H_r$H_long)/((S_l$S_long-S_r$S_long)^2) )
+  d_2 = censor_long[,4] * (S_l$S_long/(S_l$S_long-S_r$S_long+ 1e-6) + S_l$S_long*S_r$S_long*(H_l$H_long-H_r$H_long)/((S_l$S_long-S_r$S_long + 1e-6)^2) )
   
   A_mat_r = cbind(A_r$A_star1, A_r$A_star2)
   
@@ -432,13 +432,13 @@ beta_gamma_hessian = function(censor_long, beta, model_mat, A_r, A_l, S_r, S_l, 
 
 beta_theta_hessian = function(X, S_r, S_l, H_r, H_l, PsiStar_r, PsiStar_l, beta, censor){
   eXBeta = exp(X%*%beta)
-  d_1 = as.numeric(eXBeta*(censor[,1] + censor[,2] - censor[,3]*S_r$S/(1-S_r$S) + 
-                             censor[,3]*S_r$S*H_r$H/((1-S_r$S)^2) - censor[,4]*S_r$S/(S_l$S - S_r$S) -
-                             censor[,4] * S_l$S*S_r$S*(H_l$H - H_r$H)/((S_l$S - S_r$S)^2)))
+  d_1 = as.numeric(eXBeta*(censor[,1] + censor[,2] - censor[,3]*S_r$S/(1-S_r$S + 1e-6) + 
+                             censor[,3]*S_r$S*H_r$H/((1-S_r$S + 1e-6)^2) - censor[,4]*S_r$S/(S_l$S - S_r$S + 1e-6) -
+                             censor[,4] * S_l$S*S_r$S*(H_l$H - H_r$H)/((S_l$S - S_r$S + 1e-6)^2)))
   
   
-  d_2 = as.numeric(eXBeta*(censor[,4]*S_l$S/(S_l$S - S_r$S) + 
-                             censor[,4] * S_l$S*S_r$S*(H_l$H - H_r$H)/((S_l$S - S_r$S)^2)))
+  d_2 = as.numeric(eXBeta*(censor[,4]*S_l$S/(S_l$S - S_r$S+ 1e-6) + 
+                             censor[,4] * S_l$S*S_r$S*(H_l$H - H_r$H)/((S_l$S - S_r$S + 1e-6)^2)))
   
   
   beta_theta = t(X) %*% (d_1 * PsiStar_r$Psi_star) +
@@ -452,14 +452,14 @@ gamma_theta_hessian = function(P_r, P_l, A_r, A_l, censor_long, S_r, S_l, PsiSta
   
   eXBeta = exp(X_long%*%beta)
   
-  d_1 = as.numeric(censor_long[,2] + censor_long[,1] - censor_long[,3]*S_r$S_long/(1-S_r$S_long) - 
-                     censor_long[,4]*S_r$S_long/(S_l$S_long-S_r$S_long))
+  d_1 = as.numeric(censor_long[,2] + censor_long[,1] - censor_long[,3]*S_r$S_long/(1-S_r$S_long + 1e-6) - 
+                     censor_long[,4]*S_r$S_long/(S_l$S_long-S_r$S_long + 1e-6))
   
-  d_2 = as.numeric(censor_long[,4]*S_l$S_long/(S_l$S_long-S_r$S_long))
+  d_2 = as.numeric(censor_long[,4]*S_l$S_long/(S_l$S_long-S_r$S_long + 1e-6))
   
-  d_3 = as.numeric(censor_long[,3]*eXBeta*S_r$S_long*A_r$A_star/((1-S_r$S_long)^2))
+  d_3 = as.numeric(censor_long[,3]*eXBeta*S_r$S_long*A_r$A_star/((1-S_r$S_long + 1e-6)^2))
   
-  d_4 = as.numeric(censor_long[,4]*eXBeta*S_l$S_long*S_r$S_long*(A_l$A_star - A_r$A_star)/((S_l$S_long-S_r$S_long)^2))
+  d_4 = as.numeric(censor_long[,4]*eXBeta*S_l$S_long*S_r$S_long*(A_l$A_star - A_r$A_star)/((S_l$S_long-S_r$S_long + 1e-6)^2))
   
   gamma_theta = t(Z) %*% (P_r * d_1) +
     t(Z) %*% (P_l * d_2) + 
